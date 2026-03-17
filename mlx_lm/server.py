@@ -1691,9 +1691,13 @@ class APIHandler(BaseHTTPRequestHandler):
 
             # Send an additional Content-Length header when it is known
             self.send_header("Content-Length", str(len(response_json)))
-            self.end_headers()
-            self.wfile.write(response_json)
-            self.wfile.flush()
+            try:
+                self.end_headers()
+                self.wfile.write(response_json)
+                self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                # Client disconnected before we could send the response — ignore
+                logging.debug("Client disconnected before response could be sent")
 
     def completion_usage_response(
         self,
