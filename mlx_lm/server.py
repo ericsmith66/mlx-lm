@@ -1545,11 +1545,14 @@ class APIHandler(BaseHTTPRequestHandler):
                 return []
             result = []
             for tool_text in tool_calls:
-                parsed = ctx.tool_parser(tool_text, request.tools)
-                if isinstance(parsed, list):
-                    result.extend(format_tool_call(tc) for tc in parsed)
-                else:
-                    result.append(format_tool_call(parsed))
+                try:
+                    parsed = ctx.tool_parser(tool_text, request.tools)
+                    if isinstance(parsed, list):
+                        result.extend(format_tool_call(tc) for tc in parsed)
+                    else:
+                        result.append(format_tool_call(parsed))
+                except (ValueError, KeyError) as e:
+                    logging.warning(f"Tool parse error (skipping malformed tool call): {e!r} — text: {tool_text!r:.200}")
             return result
 
         # Start out in reasoning if the model is a reasoning model and the
